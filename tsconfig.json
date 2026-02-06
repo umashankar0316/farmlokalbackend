@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    /* Base Options */
+    "target": "ES2020",                                  /* Modern JavaScript features */
+    "module": "commonjs",                                /* Node.js uses CommonJS */
+    "rootDir": "./src",                                  /* Where your TS files live */
+    "outDir": "./dist",                                  /* Where JS files will be built */
+    "esModuleInterop": true,                             /* Fixes imports for CommonJS modules */
+    "forceConsistentCasingInFileNames": true,            /* consistent casing */
+    "strict": true,                                      /* Enable all strict type-checking options */
+    "skipLibCheck": true,                                /* Skip type checking all .d.ts files */
+    "resolveJsonModule": true                            /* Allows importing .json files */
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
