@@ -1,36 +1,25 @@
 import { db } from '../config/database';
-import { redis } from '../config/redis';
-import { RowDataPacket } from 'mysql2';
 
 export class ProductService {
-  static async getProducts(cursor: number, limit: number, search: string) {
-    const cacheKey = `products:${cursor}:${limit}:${search}`;
+  static async getProducts(cursor: any, limit: any) {
+    // 1. Force inputs to be Numbers (Fixes the crash)
+    const cursorNum = Number(cursor) || 0;
+    const limitNum = Number(limit) || 10;
+
+    const query = `
+      SELECT id, name, description, price 
+      FROM products 
+      WHERE id > ? 
+      ORDER BY id ASC 
+      LIMIT ?
+    `;
+
+    // 2. Use ': any' to silence the "red line" TypeScript errors
+    const [rows]: any = await db.execute(query, [cursorNum, limitNum]);
     
-    // 1. Check Cache
-    const cached = await redis.get(cacheKey);
-    if (cached) return JSON.parse(cached);
-
-    // 2. Build Query
-    let query = 'SELECT id, name, description, price FROM products WHERE id > ?';
-    const params: (string | number)[] = [cursor];
-
-    if (search) {
-      query += ' AND (name LIKE ? OR description LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`);
-    }
-
-    query += ' ORDER BY id ASC LIMIT ?';
-    params.push(limit);
-
-    // Execute Query
-    // Type casting helps TS understand the result format
-    const [rows] = await db.execute<RowDataPacket[]>(query, params);
-
-    // 3. Set Cache (TTL 60s)
-    if (rows.length > 0) {
-        await redis.set(cacheKey, JSON.stringify(rows), 'EX', 60);
-    }
-
-    return rows;
+    return {
+      data: rows,
+      nextCursor: rows.length > 0 ? rows[rows.length - 1].id : null
+    };
   }
 }

@@ -3,25 +3,20 @@ import { ProductService } from '../services/ProductService';
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const cursor = parseInt(req.query.cursor as string) || 0;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const search = (req.query.search as string) || '';
+    // 1. Clean Inputs: Ensure they are numbers right away
+    const cursor = req.query.cursor ? Number(req.query.cursor) : 0;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
 
-    const products = await ProductService.getProducts(cursor, limit, search);
-    
-    // Calculate next cursor
-    const lastProduct = products[products.length - 1];
-    const nextCursor = lastProduct ? lastProduct.id : null;
+    // 2. Call Service
+    // The service returns { data: [...], nextCursor: 5 }
+    const result = await ProductService.getProducts(cursor, limit);
 
-    res.json({ 
-      data: products, 
-      pagination: {
-        nextCursor,
-        limit
-      }
-    });
+    // 3. Send response directly
+    // We don't need to calculate nextCursor here because the Service already did it!
+    res.json(result);
+
   } catch (error) {
-    console.error(error);
+    console.error("❌ Controller Error:", error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
